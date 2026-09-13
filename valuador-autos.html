@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valuador — cuánto vale tu auto</title>
+<style>
+  :root{
+    --asfalto:#1b1d22;
+    --asfalto-2:#25282f;
+    --linea:#3a3f4a;
+    --ambar:#e8a13a;
+    --ambar-2:#c97f1f;
+    --texto:#eceff1;
+    --texto-tenue:#9aa0ab;
+    --verde:#4caf7a;
+    --rojo:#e0654f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--asfalto);
+    color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;
+  }
+  .grid-bg{
+    background-image:linear-gradient(var(--linea) 1px, transparent 1px), linear-gradient(90deg, var(--linea) 1px, transparent 1px);
+    background-size:28px 28px;
+    background-attachment:fixed;
+    min-height:100vh;
+    padding:20px 16px 60px;
+  }
+  .wrap{max-width:460px;margin:0 auto;}
+  header.top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;}
+  header.top h1{font-size:19px;margin:0;letter-spacing:.2px;}
+  header.top h1 span{color:var(--ambar);font-family:'Courier New',monospace;}
+  .btn-out{background:none;border:1px solid var(--linea);color:var(--texto-tenue);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+
+  .card{
+    background:var(--asfalto-2);
+    border:1px solid var(--linea);
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card h2{font-size:15px;margin:0 0 14px;color:var(--ambar);font-weight:600;}
+  label{display:block;font-size:12px;color:var(--texto-tenue);margin:12px 0 5px;}
+  input,select{
+    width:100%;background:var(--asfalto);border:1px solid var(--linea);color:var(--texto);
+    padding:10px 12px;border-radius:7px;font-size:14px;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--ambar);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  button.primary{
+    width:100%;margin-top:18px;background:var(--ambar);color:#1b1d22;border:none;
+    padding:12px;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.2px;
+  }
+  button.primary:disabled{opacity:.5;}
+  button.secundario{
+    width:100%;margin-top:8px;background:none;color:var(--texto-tenue);border:1px solid var(--linea);
+    padding:10px;border-radius:7px;font-size:13px;cursor:pointer;
+  }
+  .error{color:var(--rojo);font-size:12px;margin-top:8px;}
+  .msg-ok{color:var(--verde);font-size:12px;margin-top:8px;}
+  .tab-switch{display:flex;gap:6px;margin-bottom:16px;}
+  .tab-switch button{
+    flex:1;background:var(--asfalto-2);border:1px solid var(--linea);color:var(--texto-tenue);
+    padding:9px;border-radius:7px;font-size:13px;cursor:pointer;
+  }
+  .tab-switch button.on{background:var(--ambar);color:#1b1d22;border-color:var(--ambar);font-weight:700;}
+
+  .foto-drop{
+    border:1.5px dashed var(--linea);border-radius:8px;padding:18px;text-align:center;
+    color:var(--texto-tenue);font-size:13px;cursor:pointer;position:relative;overflow:hidden;
+  }
+  .foto-drop img{max-width:100%;border-radius:6px;display:block;margin-top:8px;}
+  .foto-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+  .extra-item{
+    display:flex;align-items:center;gap:10px;background:var(--asfalto);border:1px solid var(--linea);
+    border-radius:8px;padding:10px 12px;margin-top:8px;
+  }
+  .extra-item img{width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;}
+  .extra-info{flex:1;min-width:0;}
+  .extra-info .nombre{font-size:13px;font-weight:600;}
+  .extra-info .badge{font-size:10px;color:var(--ambar);}
+  .extra-item input{width:90px;padding:6px 8px;font-size:12px;}
+  .check{width:20px;height:20px;flex-shrink:0;accent-color:var(--ambar);}
+
+  .resultado-num{font-family:'Courier New',monospace;font-size:34px;font-weight:700;color:var(--ambar);text-align:center;margin:6px 0;}
+  .resultado-sub{text-align:center;color:var(--texto-tenue);font-size:12px;margin-bottom:14px;}
+  .desglose-row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--linea);}
+  .desglose-row:last-child{border-bottom:none;}
+
+  .veh-card{
+    display:flex;justify-content:space-between;align-items:center;background:var(--asfalto-2);
+    border:1px solid var(--linea);border-radius:9px;padding:14px 16px;margin-bottom:10px;cursor:pointer;
+  }
+  .veh-card .nombre{font-weight:700;font-size:14px;}
+  .veh-card .sub{font-size:11px;color:var(--texto-tenue);margin-top:2px;}
+  .veh-card .precio{font-family:'Courier New',monospace;color:var(--ambar);font-weight:700;}
+  .fab{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:428px;
+    background:var(--ambar);color:#1b1d22;border:none;padding:14px;border-radius:10px;font-weight:700;
+    font-size:14px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4);
+  }
+  .loader{color:var(--texto-tenue);font-size:12px;text-align:center;padding:10px;}
+  .hidden{display:none !important;}
+  .comp-item{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--linea);color:var(--texto-tenue);}
+  .comp-item b{color:var(--texto);}
+</style>
+</head>
+<body>
+<div class="grid-bg"><div class="wrap" id="app"></div></div>
+
+<script>
+const SUPABASE_URL = "https://ornmejtwxkjfzjfnznur.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybm1lanR3eGtqZnpqZm56bnVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMTc3NDgsImV4cCI6MjEwNDg5Mzc0OH0.D-waoHIm4hpJEMsfmEcx9Imu6-lVfVX4vWdd9nqvNOU";
+
+let session = null; // {access_token, user}
+let vista = "login"; // login | dashboard | nuevo
+let loginTab = "entrar";
+let cargando = false;
+let errorMsg = "";
+
+let form = { marca:"", modelo:"", anio:"", version:"", kilometraje:"", color:"" };
+let fotoPrincipal = null; // {file, dataUrl}
+let fotosExtras = []; // {file, dataUrl}
+let extrasSugeridos = []; // {nombre, marca_extra, foto_dataUrl, confirmado, precio_estimado}
+let comparablesEncontrados = [];
+let resultado = null;
+let vehiculos = [];
+let pasoNuevo = 1;
+
+function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstChild; }
+function render(){ document.getElementById('app').innerHTML=""; document.getElementById('app').appendChild(vistaActual()); }
+
+async function sb(path, opts={}){
+  const headers = Object.assign({
+    apikey: ANON_KEY,
+    'Content-Type':'application/json'
+  }, session ? {Authorization:'Bearer '+session.access_token} : {Authorization:'Bearer '+ANON_KEY}, opts.headers||{});
+  const res = await fetch(SUPABASE_URL+path, Object.assign({}, opts, {headers}));
+  if(!res.ok){ const t = await res.text(); throw new Error(t); }
+  const ct = res.headers.get('content-type')||'';
+  return ct.includes('json') ? res.json() : null;
+}
+
+async function registrar(email, pass){
+  return sb('/auth/v1/signup', {method:'POST', body:JSON.stringify({email,password:pass})});
+}
+async function iniciarSesion(email, pass){
+  const r = await sb('/auth/v1/token?grant_type=password', {method:'POST', body:JSON.stringify({email,password:pass})});
+  return r;
+}
+
+async function subirFoto(file, carpeta){
+  const ext = file.name.split('.').pop();
+  const path = carpeta+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
+  const buf = await file.arrayBuffer();
+  const res = await fetch(SUPABASE_URL+'/storage/v1/object/vehiculo-fotos/'+path, {
+    method:'POST',
+    headers:{apikey:ANON_KEY, Authorization:'Bearer '+session.access_token, 'Content-Type':file.type},
+    body:buf
+  });
+  if(!res.ok) throw new Error(await res.text());
+  return SUPABASE_URL+'/storage/v1/object/public/vehiculo-fotos/'+path;
+}
+
+function fileToDataUrl(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function sugerirExtrasConIA(dataUrls){
+  const contenido = [
+    {type:'text', text:'Estas son fotos de accesorios/modificaciones aftermarket instaladas en una camioneta o auto (bull bars, roll bars, rines, defensas, luces, etc). Para cada foto identifica: nombre del accesorio y marca si es visible/reconocible (ej. Spider, Goodyear, ARB). Responde SOLO con JSON válido, sin texto adicional, en este formato exacto: [{"nombre":"...","marca_extra":"...","precio_estimado_mxn":numero}]. Si no reconoces la marca deja marca_extra como cadena vacía. precio_estimado_mxn es tu mejor estimado de precio de mercado en pesos mexicanos para ese accesorio.'}
+  ];
+  dataUrls.forEach(du=>{
+    const [meta, data] = du.split(',');
+    const media_type = meta.match(/data:(.*);base64/)[1];
+    contenido.push({type:'image', source:{type:'base64', media_type, data}});
+  });
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens:1000,
+      messages:[{role:'user', content:contenido}]
+    })
+  });
+  const data = await res.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  const clean = text.replace(/```json|```/g,'').trim();
+  try { return JSON.parse(clean); } catch(e){ return []; }
+}
+
+async function buscarComparables(marca, modelo, anio){
+  const anioMin = anio ? (parseInt(anio)-1) : 0;
+  const anioMax = anio ? (parseInt(anio)+1) : 9999;
+  const q = `/rest/v1/comparables?marca=ilike.${encodeURIComponent(marca)}&modelo=ilike.${encodeURIComponent(modelo)}&anio=gte.${anioMin}&anio=lte.${anioMax}&select=*`;
+  return sb(q, {method:'GET'});
+}
+
+async function cargarVehiculos(){
+  vehiculos = await sb('/rest/v1/vehiculos_valuados?select=*&order=created_at.desc', {method:'GET'}) || [];
+}
+
+async function guardarVehiculoCompleto(){
+  const nuevo = await sb('/rest/v1/vehiculos_valuados', {
+    method:'POST',
+    headers:{Prefer:'return=representation'},
+    body: JSON.stringify({
+      user_id: session.user.id,
+      marca: form.marca, modelo: form.modelo, anio: parseInt(form.anio)||null,
+      version: form.version, kilometraje: parseInt(form.kilometraje)||null, color: form.color,
+      foto_principal_url: fotoPrincipal ? fotoPrincipal.url : null,
+      precio_base_estimado: resultado.precioBase,
+      precio_extras_estimado: resultado.valorExtras,
+      precio_final_estimado: resultado.precioFinal,
+      status:'completado'
+    })
+  });
+  const vehiculoId = nuevo[0].id;
+  for(const ex of extrasSugeridos.filter(e=>e.confirmado)){
+    await sb('/rest/v1/extras_detectados', {
+      method:'POST',
+      body: JSON.stringify({
+        vehiculo_id: vehiculoId, nombre_extra: ex.nombre, marca_extra: ex.marca_extra,
+        foto_url: ex.foto_url||null, sugerido_por_ia:true, confirmado_por_usuario:true,
+        precio_estimado: ex.precio_estimado
+      })
+    });
+  }
+}
+
+function calcularResultado(){
+  const precioBase = comparablesEncontrados.length
+    ? comparablesEncontrados.reduce((a,c)=>a+Number(c.precio),0)/comparablesEncontrados.length
+    : null;
+  const valorExtras = extrasSugeridos.filter(e=>e.confirmado).reduce((a,e)=>a + (Number(e.precio_estimado)||0)*0.5, 0);
+  resultado = {
+    precioBase: precioBase,
+    valorExtras: Math.round(valorExtras),
+    precioFinal: precioBase ? Math.round(precioBase + valorExtras) : null
+  };
+}
+
+// ---------- VISTAS ----------
+
+function vistaActual(){
+  if(vista==='login') return vistaLogin();
+  if(vista==='dashboard') return vistaDashboard();
+  if(vista==='nuevo') return vistaNuevo();
+  return el('<div></div>');
+}
+
+function vistaLogin(){
+  const c = el(`
+    <div>
+      <header class="top"><h1>Valu<span>ador</span></h1></header>
+      <div class="card">
+        <div class="tab-switch">
+          <button id="tabEntrar" class="${loginTab==='entrar'?'on':''}">Entrar</button>
+          <button id="tabRegistrar" class="${loginTab==='registrar'?'on':''}">Crear cuenta</button>
+        </div>
+        <label>Correo</label>
+        <input id="email" type="email" placeholder="tucorreo@ejemplo.com">
+        <label>Contraseña</label>
+        <input id="pass" type="password" placeholder="••••••••">
+        <button class="primary" id="btnGo" ${cargando?'disabled':''}>${cargando?'Un momento...':(loginTab==='entrar'?'Entrar':'Crear cuenta')}</button>
+        ${errorMsg?`<div class="error">${errorMsg}</div>`:''}
+      </div>
+    </div>
+  `);
+  c.querySelector('#tabEntrar').onclick=()=>{loginTab='entrar';errorMsg='';render();};
+  c.querySelector('#tabRegistrar').onclick=()=>{loginTab='registrar';errorMsg='';render();};
+  c.querySelector('#btnGo').onclick=async()=>{
+    const email=c.querySelector('#email').value.trim();
+    const pass=c.querySelector('#pass').value;
+    if(!email||!pass){errorMsg='Completa correo y contraseña';render();return;}
+    cargando=true; errorMsg=''; render();
+    try{
+      if(loginTab==='registrar'){
+        await registrar(email,pass);
+        session = await iniciarSesion(email,pass);
+      } else {
+        session = await iniciarSesion(email,pass);
+      }
+      await cargarVehiculos();
+      vista='dashboard';
+    }catch(e){
+      errorMsg='No se pudo completar. Revisa tus datos.';
+    }
+    cargando=false; render();
+  };
+  return c;
+}
+
+function vistaDashboard(){
+  const c = el(`
+    <div>
+      <header class="top">
+        <h1>Valu<span>ador</span></h1>
+        <button class="btn-out" id="btnSalir">Salir</button>
+      </header>
+      <div id="listaVeh"></div>
+      <button class="fab" id="btnNuevo">+ Nueva valuación</button>
+    </div>
+  `);
+  const lista = c.querySelector('#listaVeh');
+  if(vehiculos.length===0){
+    lista.appendChild(el(`<div class="card"><div class="loader">Aún no tienes valuaciones. Crea la primera.</div></div>`));
+  } else {
+    vehiculos.forEach(v=>{
+      lista.appendChild(el(`
+        <div class="veh-card">
+          <div>
+            <div class="nombre">${v.marca} ${v.modelo} ${v.anio||''}</div>
+            <div class="sub">${v.version||''} · ${v.kilometraje?v.kilometraje.toLocaleString('es-MX')+' km':''}</div>
+          </div>
+          <div class="precio">${v.precio_final_estimado?'$'+Math.round(v.precio_final_estimado).toLocaleString('es-MX'):'—'}</div>
+        </div>
+      `));
+    });
+  }
+  c.querySelector('#btnSalir').onclick=()=>{session=null;vista='login';render();};
+  c.querySelector('#btnNuevo').onclick=()=>{
+    form={marca:'',modelo:'',anio:'',version:'',kilometraje:'',color:''};
+    fotoPrincipal=null; fotosExtras=[]; extrasSugeridos=[]; comparablesEncontrados=[]; resultado=null; pasoNuevo=1;
+    vista='nuevo'; render();
+  };
+  return c;
+}
+
+function vistaNuevo(){
+  if(pasoNuevo===1) return pasoDatos();
+  if(pasoNuevo===2) return pasoFotosExtras();
+  if(pasoNuevo===3) return pasoComparables();
+  if(pasoNuevo===4) return pasoResultado();
+}
+
+function pasoDatos(){
+  const c = el(`
+    <div>
+      <header class="top"><h1>Valu<span>ador</span></h1><button class="btn-out" id="btnCerrar">Cerrar</button></header>
+      <div class="card">
+        <h2>1 · Datos del vehículo</h2>
+        <div class="foto-drop" id="dropPrincipal">
+          ${fotoPrincipal ? `<img src="${fotoPrincipal.dataUrl}">` : 'Toca para subir una foto del auto'}
+          <input type="file" accept="image/*" id="inputPrincipal">
+        </div>
+        <label>Marca</label><input id="marca" value="${form.marca}" placeholder="Nissan">
+        <label>Modelo</label><input id="modelo" value="${form.modelo}" placeholder="Frontier">
+        <div class="row2">
+          <div><label>Año</label><input id="anio" value="${form.anio}" placeholder="2021"></div>
+          <div><label>Versión</label><input id="version" value="${form.version}" placeholder="Platinum"></div>
+        </div>
+        <div class="row2">
+          <div><label>Kilometraje</label><input id="km" value="${form.kilometraje}" placeholder="120000"></div>
+          <div><label>Color</label><input id="color" value="${form.color}" placeholder="Marrón"></div>
+        </div>
+        <button class="primary" id="btnSiguiente">Siguiente: extras</button>
+      </div>
+    </div>
+  `);
+  c.querySelector('#btnCerrar').onclick=()=>{vista='dashboard';render();};
+  c.querySelector('#inputPrincipal').onchange=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    const dataUrl = await fileToDataUrl(file);
+    fotoPrincipal={file,dataUrl};
+    render();
+  };
+  c.querySelector('#btnSiguiente').onclick=()=>{
+    form.marca=c.querySelector('#marca').value;
+    form.modelo=c.querySelector('#modelo').value;
+    form.anio=c.querySelector('#anio').value;
+    form.version=c.querySelector('#version').value;
+    form.kilometraje=c.querySelector('#km').value;
+    form.color=c.querySelector('#color').value;
+    pasoNuevo=2; render();
+  };
+  return c;
+}
+
+function pasoFotosExtras(){
+  const c = el(`
+    <div>
+      <header class="top"><h1>Valu<span>ador</span></h1><button class="btn-out" id="btnCerrar">Cerrar</button></header>
+      <div class="card">
+        <h2>2 · Extras y modificaciones</h2>
+        <div class="foto-drop" id="dropExtra">
+          Toca para agregar fotos de extras (rines, defensa, roll bar...)
+          <input type="file" accept="image/*" multiple id="inputExtra">
+        </div>
+        <div id="miniaturas" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
+        <button class="secundario" id="btnAnalizar" ${fotosExtras.length===0?'disabled':''}>${cargando?'Analizando fotos...':'Detectar extras con IA'}</button>
+        <div id="listaExtras"></div>
+        ${errorMsg?`<div class="error">${errorMsg}</div>`:''}
+        <button class="primary" id="btnSiguiente">Siguiente: comparables</button>
+        <button class="secundario" id="btnAtras">Atrás</button>
+      </div>
+    </div>
+  `);
+  const mini = c.querySelector('#miniaturas');
+  fotosExtras.forEach(f=>mini.appendChild(el(`<img src="${f.dataUrl}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;">`)));
+
+  const listaExtras = c.querySelector('#listaExtras');
+  extrasSugeridos.forEach((ex,i)=>{
+    const item = el(`
+      <div class="extra-item">
+        <input type="checkbox" class="check" ${ex.confirmado?'checked':''} data-i="${i}">
+        <div class="extra-info">
+          <div class="nombre">${ex.nombre}</div>
+          <div class="badge">${ex.marca_extra||'marca no identificada'} · sugerido por IA</div>
+        </div>
+        <input type="number" value="${ex.precio_estimado||0}" data-precio="${i}">
+      </div>
+    `);
+    item.querySelector('.check').onchange=(e)=>{extrasSugeridos[i].confirmado=e.target.checked;};
+    item.querySelector('[data-precio]').onchange=(e)=>{extrasSugeridos[i].precio_estimado=Number(e.target.value);};
+    listaExtras.appendChild(item);
+  });
+
+  c.querySelector('#btnCerrar').onclick=()=>{vista='dashboard';render();};
+  c.querySelector('#btnAtras').onclick=()=>{pasoNuevo=1;render();};
+  c.querySelector('#inputExtra').onchange=async(e)=>{
+    const files=[...e.target.files];
+    for(const file of files){
+      const dataUrl=await fileToDataUrl(file);
+      fotosExtras.push({file,dataUrl});
+    }
+    render();
+  };
+  c.querySelector('#btnAnalizar').onclick=async()=>{
+    cargando=true; errorMsg=''; render();
+    try{
+      const sugerencias = await sugerirExtrasConIA(fotosExtras.map(f=>f.dataUrl));
+      extrasSugeridos = sugerencias.map((s,i)=>({
+        nombre:s.nombre, marca_extra:s.marca_extra,
+        precio_estimado:s.precio_estimado_mxn,
+        foto_dataUrl: fotosExtras[i] ? fotosExtras[i].dataUrl : null,
+        confirmado:true
+      }));
+    }catch(e){ errorMsg='No se pudo analizar las fotos, intenta de nuevo.'; }
+    cargando=false; render();
+  };
+  c.querySelector('#btnSiguiente').onclick=async()=>{
+    cargando=true; render();
+    try{
+      comparablesEncontrados = await buscarComparables(form.marca, form.modelo, form.anio) || [];
+    }catch(e){ comparablesEncontrados=[]; }
+    cargando=false;
+    pasoNuevo=3; render();
+  };
+  return c;
+}
+
+function pasoComparables(){
+  const c = el(`
+    <div>
+      <header class="top"><h1>Valu<span>ador</span></h1><button class="btn-out" id="btnCerrar">Cerrar</button></header>
+      <div class="card">
+        <h2>3 · Publicaciones comparables</h2>
+        ${comparablesEncontrados.length ? '' : '<div class="loader">No hay comparables guardados aún para este modelo/año. Puedes agregar uno abajo.</div>'}
+        <div id="listaComp"></div>
+      </div>
+      <div class="card">
+        <h2>Agregar comparable (para hoy y para el futuro)</h2>
+        <div class="row2">
+          <div><label>Precio</label><input id="compPrecio" placeholder="450000"></div>
+          <div><label>Km</label><input id="compKm" placeholder="120000"></div>
+        </div>
+        <label>Fuente</label>
+        <select id="compFuente">
+          <option value="mercado_libre">Mercado Libre</option>
+          <option value="facebook_marketplace">Facebook Marketplace</option>
+          <option value="seminuevos">Seminuevos</option>
+          <option value="otro">Otro</option>
+        </select>
+        <label>Link (opcional)</label>
+        <input id="compUrl" placeholder="https://...">
+        <button class="secundario" id="btnAgregarComp">+ Agregar a la base</button>
+      </div>
+      <button class="primary" id="btnSiguiente">Calcular valuación</button>
+      <button class="secundario" id="btnAtras">Atrás</button>
+    </div>
+  `);
+  const lc = c.querySelector('#listaComp');
+  comparablesEncontrados.forEach(cp=>{
+    lc.appendChild(el(`<div class="comp-item"><span>${cp.fuente||'—'} · ${cp.kilometraje?cp.kilometraje.toLocaleString('es-MX')+' km':''}</span><b>$${Number(cp.precio).toLocaleString('es-MX')}</b></div>`));
+  });
+  c.querySelector('#btnCerrar').onclick=()=>{vista='dashboard';render();};
+  c.querySelector('#btnAtras').onclick=()=>{pasoNuevo=2;render();};
+  c.querySelector('#btnAgregarComp').onclick=async()=>{
+    const precio=Number(c.querySelector('#compPrecio').value);
+    const km=Number(c.querySelector('#compKm').value);
+    const fuente=c.querySelector('#compFuente').value;
+    const url=c.querySelector('#compUrl').value;
+    if(!precio){return;}
+    const nuevo = await sb('/rest/v1/comparables',{
+      method:'POST', headers:{Prefer:'return=representation'},
+      body: JSON.stringify({marca:form.marca, modelo:form.modelo, anio:parseInt(form.anio)||null, kilometraje:km||null, precio, fuente, url, extras:[]})
+    });
+    comparablesEncontrados.push(nuevo[0]);
+    render();
+  };
+  c.querySelector('#btnSiguiente').onclick=async()=>{
+    calcularResultado();
+    if(fotoPrincipal){
+      try{ fotoPrincipal.url = await subirFoto(fotoPrincipal.file, 'principales'); }catch(e){}
+    }
+    pasoNuevo=4; render();
+  };
+  return c;
+}
+
+function pasoResultado(){
+  const c = el(`
+    <div>
+      <header class="top"><h1>Valu<span>ador</span></h1><button class="btn-out" id="btnCerrar">Cerrar</button></header>
+      <div class="card">
+        <h2>Resultado</h2>
+        ${resultado.precioFinal ? `
+          <div class="resultado-num">$${resultado.precioFinal.toLocaleString('es-MX')}</div>
+          <div class="resultado-sub">${form.marca} ${form.modelo} ${form.anio} ${form.version}</div>
+          <div class="desglose-row"><span>Precio base (comparables)</span><span>$${Math.round(resultado.precioBase).toLocaleString('es-MX')}</span></div>
+          <div class="desglose-row"><span>Valor de extras confirmados</span><span>+$${resultado.valorExtras.toLocaleString('es-MX')}</span></div>
+        ` : `<div class="loader">No hay suficientes comparables para calcular un precio base. Agrega alguno en el paso anterior.</div>`}
+      </div>
+      <button class="primary" id="btnGuardar">${cargando?'Guardando...':'Guardar valuación'}</button>
+      <button class="secundario" id="btnAtras">Atrás</button>
+    </div>
+  `);
+  c.querySelector('#btnCerrar').onclick=()=>{vista='dashboard';render();};
+  c.querySelector('#btnAtras').onclick=()=>{pasoNuevo=3;render();};
+  c.querySelector('#btnGuardar').onclick=async()=>{
+    cargando=true; render();
+    try{
+      await guardarVehiculoCompleto();
+      await cargarVehiculos();
+      vista='dashboard';
+    }catch(e){ errorMsg='No se pudo guardar.'; }
+    cargando=false; render();
+  };
+  return c;
+}
+
+render();
+</script>
+</body>
+</html>
